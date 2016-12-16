@@ -2,6 +2,7 @@ package com.github.ymegane.android.taptaptap.presentation.view;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
@@ -16,7 +17,6 @@ import rx.Observable;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 public class TapView extends FrameLayout {
 
@@ -79,6 +79,7 @@ public class TapView extends FrameLayout {
                     @Override
                     public void onNext(Point point) {
                         addCircleView(point);
+                        vibrate();
                     }
                 });
     }
@@ -94,5 +95,13 @@ public class TapView extends FrameLayout {
         addView(view);
 
         view.startAnimation();
+    }
+
+    private synchronized void vibrate() {
+        Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (!vibrator.hasVibrator()) {
+            return;
+        }
+        vibrator.vibrate(500);
     }
 }

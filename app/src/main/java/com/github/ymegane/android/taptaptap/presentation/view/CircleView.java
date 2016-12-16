@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
@@ -34,7 +33,7 @@ public class CircleView extends View {
     private final Paint paint = new Paint();
     private ValueAnimator animator;
     private float defaultRadius;
-    private final int DURATION = 3000;
+    private static final int DURATION = 3000;
 
     public void startAnimation() {
         defaultRadius = getResources().getDimensionPixelSize(R.dimen.circle_radius);
