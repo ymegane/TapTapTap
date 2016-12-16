@@ -93,12 +93,12 @@ public class TapPresenterImpl implements TapPresenter{
         mVisible = true;
 
         // Set up the user interaction to manually show or hide the system UI.
-        binding.tapView.setOnClickListener(new View.OnClickListener() {
+        /*binding.tapView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 toggle();
             }
-        });
+        });*/
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
