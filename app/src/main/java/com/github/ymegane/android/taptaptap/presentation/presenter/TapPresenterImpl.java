@@ -9,7 +9,7 @@ import android.view.View;
 import com.github.ymegane.android.taptaptap.databinding.ActivityFullscreenBinding;
 import com.github.ymegane.android.taptaptap.presentation.activity.FullscreenActivity;
 
-public class TapPresenterImpl implements TapPresenter{
+public class TapPresenterImpl implements TapPresenter {
 
     /**
      * Whether or not the system UI should be auto-hidden after
@@ -114,6 +114,11 @@ public class TapPresenterImpl implements TapPresenter{
     public void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    public void release() {
+        binding.tapView.release();
     }
 
     private void toggle() {

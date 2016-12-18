@@ -1,13 +1,12 @@
 package com.github.ymegane.android.taptaptap.presentation.view;
 
 import android.content.Context;
-import android.graphics.Point;
 import android.os.Vibrator;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
-import com.github.ymegane.android.taptaptap.R;
 import com.jakewharton.rxbinding.view.RxView;
 
 import java.util.ArrayList;
@@ -15,8 +14,11 @@ import java.util.List;
 
 import rx.Observable;
 import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
+import rx.Subscription;
+import rx.functions.Action1;
 import rx.functions.Func1;
+
+import com.github.ymegane.android.taptaptap.presentation.view.CircleView.Circle;
 
 public class TapView extends FrameLayout {
 
@@ -41,67 +43,129 @@ public class TapView extends FrameLayout {
     }
 
     private void init() {
-        RxView.touches(this)
-                .filter(new Func1<MotionEvent, Boolean>() {
-                    @Override
-                    public Boolean call(MotionEvent motionEvent) {
-                        return motionEvent.getAction() == MotionEvent.ACTION_DOWN;
-                    }
-                })
-                .flatMap(new Func1<MotionEvent, Observable<Point>>() {
-                    @Override
-                    public Observable<Point> call(MotionEvent motionEvent) {
-                        int n = motionEvent.getPointerCount();
-                        List<Point> points = new ArrayList<>(n);
-                        for (int i=0; i<n; i++) {
-                            points.add(new Point((int)motionEvent.getX(i), (int)motionEvent.getY(i)));
-                        }
-                        return Observable.from(points);
-                    }
-                })
-                .filter(new Func1<Point, Boolean>() {
-                    @Override
-                    public Boolean call(Point point) {
-                        return getChildCount() < 30;
-                    }
-                })
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Point>() {
-                    @Override
-                    public void onCompleted() {
-                    }
+        prepareForTouchEvent();
+    }
 
-                    @Override
-                    public void onError(Throwable e) {
-                    }
+    private long lastVibratedTime;
+    private Subscription subscription;
+    private void prepareForTouchEvent() {
+        subscription = RxView.touches(this).flatMap(new Func1<MotionEvent, Observable<Circle>>() {
+            @Override
+            public Observable<Circle> call(MotionEvent event) {
+                int n = event.getPointerCount();
 
-                    @Override
-                    public void onNext(Point point) {
-                        addCircleView(point);
+                List<Circle> circles = new ArrayList<>(n);
+                for (int i=0; i<n; i++) {
+                    Circle circle = new Circle(i, event);
+                    circles.add(circle);
+                }
+                return Observable.from(circles);
+            }
+        }).doOnNext(new Action1<Circle>() {
+            @Override
+            public void call(Circle circle) {
+                MotionEvent event = circle.event;
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    if (event.getEventTime() - lastVibratedTime > 100) {
+                        lastVibratedTime = event.getEventTime();
                         vibrate();
                     }
-                });
+                    CircleView view = findCircleView(circle);
+                    if (view != null) {
+                        view.continueCancelTimer();
+                    }
+                }
+            }
+        }).doOnNext(new Action1<Circle>() {
+            @Override
+            public void call(Circle circle) {
+                MotionEvent event = circle.event;
+                if (event.getActionMasked() == MotionEvent.ACTION_UP
+                        || event.getActionMasked() == MotionEvent.ACTION_POINTER_UP
+                        || event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+                    CircleView view = findCircleView(circle);
+                    if (view != null) {
+                        view.startAnimation();
+                    }
+                }
+            }
+        }).filter(new Func1<Circle, Boolean>() {
+            @Override
+            public Boolean call(Circle circle) {
+                MotionEvent event = circle.event;
+                return event.getActionMasked() == MotionEvent.ACTION_DOWN ||
+                        event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN;
+            }
+        }).filter(new Func1<Circle, Boolean>() {
+            @Override
+            public Boolean call(Circle circle) {
+                return findCircleView(circle) == null;
+            }
+        })
+        .filter(new Func1<Circle, Boolean>() {
+            @Override
+            public Boolean call(Circle circle) {
+                return getChildCount() < 100;
+            }
+        })
+        .subscribe(new Observer<Circle>() {
+            @Override
+            public void onCompleted() {
+            }
+
+            @Override
+            public void onError(Throwable e) {
+            }
+
+            @Override
+            public void onNext(Circle circle) {
+                addCircleView(circle);
+                vibratePattern();
+            }
+        });
     }
 
-    private synchronized void addCircleView(Point point) {
-        CircleView view = new CircleView(getContext());
-        view.setElevation(getResources().getDimension(R.dimen.circle_elevation));
-        int width = getResources().getDimensionPixelSize(R.dimen.circle_width);
-        int height = getResources().getDimensionPixelSize(R.dimen.circle_width);
-        LayoutParams params = new LayoutParams(width, height);
-        params.setMargins(point.x - width/2, point.y - height/2, 0, 0);
-        view.setLayoutParams(params);
+    public void release() {
+        if (subscription != null) {
+            subscription.unsubscribe();
+        }
+    }
+
+    @Nullable
+    private CircleView findCircleView(Circle circle) {
+        int n = getChildCount();
+        for (int i=0; i < n; i++) {
+            CircleView child = (CircleView) getChildAt(i);
+            if (child.equals(circle)) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    private void addCircleView(Circle circle) {
+        CircleView view = new CircleView(getContext(), circle);
         addView(view);
-
-        view.startAnimation();
+        view.invalidate();
     }
 
-    private synchronized void vibrate() {
+    private void vibrate() {
         Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
         if (!vibrator.hasVibrator()) {
             return;
         }
-        vibrator.vibrate(500);
+
+        vibrator.vibrate(10);
+    }
+
+    private static final long[] PATTERN = new long[]{100, 500};
+
+    private void vibratePattern() {
+        Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (!vibrator.hasVibrator()) {
+            return;
+        }
+
+        vibrator.vibrate(PATTERN, 1);
     }
 }
