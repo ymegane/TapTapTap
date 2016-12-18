@@ -22,6 +22,8 @@ import com.github.ymegane.android.taptaptap.presentation.view.CircleView.Circle;
 
 public class TapView extends FrameLayout {
 
+    private OnTapListener tapListener;
+
     public TapView(Context context) {
         super(context);
         init();
@@ -40,6 +42,10 @@ public class TapView extends FrameLayout {
     public TapView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init();
+    }
+
+    public void setOnTapListener(OnTapListener listener) {
+        this.tapListener = listener;
     }
 
     private void init() {
@@ -66,7 +72,7 @@ public class TapView extends FrameLayout {
             public void call(Circle circle) {
                 MotionEvent event = circle.event;
                 if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    if (event.getEventTime() - lastVibratedTime > 100) {
+                    if (event.getEventTime() - lastVibratedTime > 600) {
                         lastVibratedTime = event.getEventTime();
                         vibrate();
                     }
@@ -121,6 +127,9 @@ public class TapView extends FrameLayout {
             public void onNext(Circle circle) {
                 addCircleView(circle);
                 vibratePattern();
+                if (tapListener != null) {
+                    tapListener.onTap();
+                }
             }
         });
     }
@@ -155,7 +164,7 @@ public class TapView extends FrameLayout {
             return;
         }
 
-        vibrator.vibrate(10);
+        vibrator.vibrate(500);
     }
 
     private static final long[] PATTERN = new long[]{100, 500};
@@ -167,5 +176,9 @@ public class TapView extends FrameLayout {
         }
 
         vibrator.vibrate(PATTERN, 1);
+    }
+
+    public interface OnTapListener {
+        void onTap();
     }
 }

@@ -6,6 +6,7 @@ import android.os.Bundle;
 
 import com.github.ymegane.android.taptaptap.R;
 import com.github.ymegane.android.taptaptap.databinding.ActivityFullscreenBinding;
+import com.github.ymegane.android.taptaptap.domain.usecase.SoundEffectUseCaseImpl;
 import com.github.ymegane.android.taptaptap.presentation.presenter.TapPresenter;
 import com.github.ymegane.android.taptaptap.presentation.presenter.TapPresenterImpl;
 
@@ -22,7 +23,7 @@ public class FullscreenActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         ActivityFullscreenBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_fullscreen);
-        presenter = new TapPresenterImpl(this, binding);
+        presenter = new TapPresenterImpl(this, binding, new SoundEffectUseCaseImpl(this));
         presenter.init();
     }
 

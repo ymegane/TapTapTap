@@ -7,7 +7,14 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.github.ymegane.android.taptaptap.databinding.ActivityFullscreenBinding;
+import com.github.ymegane.android.taptaptap.domain.usecase.SoundEffectUseCase;
 import com.github.ymegane.android.taptaptap.presentation.activity.FullscreenActivity;
+import com.github.ymegane.android.taptaptap.presentation.view.TapView;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class TapPresenterImpl implements TapPresenter {
 
@@ -82,10 +89,12 @@ public class TapPresenterImpl implements TapPresenter {
 
     private final FullscreenActivity activity;
     private final ActivityFullscreenBinding binding;
+    private final SoundEffectUseCase useCase;
 
-    public TapPresenterImpl(FullscreenActivity activity, ActivityFullscreenBinding binding) {
+    public TapPresenterImpl(FullscreenActivity activity, ActivityFullscreenBinding binding, SoundEffectUseCase useCase) {
         this.activity = activity;
         this.binding = binding;
+        this.useCase = useCase;
     }
 
     @Override
@@ -99,7 +108,19 @@ public class TapPresenterImpl implements TapPresenter {
                 toggle();
             }
         });*/
-
+        binding.tapView.setOnTapListener(new TapView.OnTapListener() {
+            @Override
+            public void onTap() {
+                Observable.create(new Observable.OnSubscribe<Void>() {
+                    @Override
+                    public void call(Subscriber<? super Void> subscriber) {
+                        useCase.playRandom();
+                        subscriber.onNext(null);
+                        subscriber.onCompleted();
+                    }
+                }).subscribeOn(Schedulers.newThread()).toBlocking().single();
+            }
+        });
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
@@ -118,6 +139,7 @@ public class TapPresenterImpl implements TapPresenter {
 
     @Override
     public void release() {
+        useCase.stop();
         binding.tapView.release();
     }
 
