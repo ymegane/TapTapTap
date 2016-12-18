@@ -38,6 +38,12 @@ public class FullscreenActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        presenter.delayedHide(100);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         presenter.release();
