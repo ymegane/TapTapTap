@@ -7,26 +7,26 @@ import com.github.ymegane.android.taptaptap.domain.repository.SoundEffectReposit
 
 public class SoundEffectUseCaseImpl implements SoundEffectUseCase {
 
-    private final SoundEffectRepository mRepository;
+    private final SoundEffectRepository repository;
 
     public SoundEffectUseCaseImpl(SoundEffectRepository repository) {
-        mRepository = repository;
-        mRepository.load();
+        this.repository = repository;
+        this.repository.load();
     }
 
     public SoundEffectUseCaseImpl(Context context) {
-        mRepository = new SoundEffectRepositoryImpl(context);
-        mRepository.load();
+        this.repository = new SoundEffectRepositoryImpl(context);
+        this.repository.load();
     }
 
 
     @Override
     public void playRandom() {
-        mRepository.play();
+        repository.play();
     }
 
     @Override
     public void stop() {
-       mRepository.release();
+       repository.release();
     }
 }
