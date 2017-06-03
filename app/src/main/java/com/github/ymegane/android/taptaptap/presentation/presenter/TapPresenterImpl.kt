@@ -8,9 +8,8 @@ import com.github.ymegane.android.taptaptap.databinding.ActivityFullscreenBindin
 import com.github.ymegane.android.taptaptap.domain.usecase.SoundEffectUseCase
 import com.github.ymegane.android.taptaptap.presentation.activity.FullscreenActivity
 import com.github.ymegane.android.taptaptap.presentation.view.TapView
-
-import rx.Observable
-import rx.schedulers.Schedulers
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 
 class TapPresenterImpl(private val activity: FullscreenActivity, private val binding: ActivityFullscreenBinding, private val useCase: SoundEffectUseCase) : TapPresenter {
     private val mHideHandler = Handler()

@@ -19,7 +19,7 @@ import com.github.ymegane.android.taptaptap.domain.model.Circle
 class CircleView(context: Context, val circle: Circle) : View(context) {
     private val paint = Paint()
     private var animator: ValueAnimator? = null
-    private val defaultRadius: Float = resources.getDimensionPixelSize(R.dimen.circle_radius).toFloat()
+    private val defaultRadius: Float = resources.getDimension(R.dimen.circle_radius)
 
     private val cancelHandler = Handler(Looper.getMainLooper())
     private val cancelTimer = Runnable { startAnimation() }

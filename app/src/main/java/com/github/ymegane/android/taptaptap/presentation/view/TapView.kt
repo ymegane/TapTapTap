@@ -7,12 +7,11 @@ import android.view.MotionEvent
 import android.widget.FrameLayout
 import com.github.ymegane.android.taptaptap.domain.model.Circle
 
-import com.jakewharton.rxbinding.view.RxView
+import com.jakewharton.rxbinding2.view.RxView
+import io.reactivex.Observable
+import io.reactivex.disposables.Disposable
 
 import java.util.ArrayList
-
-import rx.Observable
-import rx.Subscription
 
 class TapView : FrameLayout {
 
@@ -35,15 +34,15 @@ class TapView : FrameLayout {
     }
 
     private var lastVibratedTime: Long = 0
-    private var subscription: Subscription? = null
+    private var disposable: Disposable? = null
     private fun prepareForTouchEvent() {
-        subscription = RxView.touches(this).flatMap { event ->
+        disposable = RxView.touches(this).flatMap { event ->
             val n = event.pointerCount
 
             // Add circles for the number of points
             val circles = ArrayList<Circle>(n)
             (0..n - 1).mapTo(circles) { Circle(it, event) }
-            Observable.from(circles)
+            Observable.fromIterable(circles)
         }.doOnNext { circle ->
             val event = circle.event
             if (event.action == MotionEvent.ACTION_MOVE) {
@@ -74,7 +73,7 @@ class TapView : FrameLayout {
         }
     }
 
-    fun release() = subscription?.unsubscribe()
+    fun release() = disposable?.dispose()
 
     private fun findCircleView(circle: Circle): CircleView? {
         val n = childCount
